@@ -1,0 +1,56 @@
+package com.cts.logichain360.enums;
+
+public enum AuditAction {
+
+    //User
+    USER_REGISTERED,
+    USER_LOGGED_IN,
+    USER_UPDATED,
+    USER_STATUS_CHANGED,
+    USER_DELETED,
+
+    //Customer
+    CUSTOMER_UPDATED,
+    CUSTOMER_DELETED,
+
+    //Vendor
+    VENDOR_UPDATED,
+    VENDOR_DELETED,
+
+    //Driver
+    DRIVER_UPDATED,
+    DRIVER_AVAILABILITY_CHANGED,
+    DRIVER_DELETED,
+
+    //Warehouse
+    WAREHOUSE_CREATED,
+    WAREHOUSE_UPDATED,
+    WAREHOUSE_DELETED,
+
+    //Warehouse Manager
+    WM_UPDATED,
+    WM_WAREHOUSE_ASSIGNED,
+    WM_DELETED,
+
+    //Product
+    PRODUCT_CREATED,
+    PRODUCT_UPDATED,
+    PRODUCT_DELETED,
+
+    //Product-Warehouse (stock)
+    PRODUCT_LAUNCHED_AT_WAREHOUSE,
+    PRODUCT_RESTOCKED,
+    STOCK_THRESHOLDS_UPDATED,
+    PRODUCT_WAREHOUSE_DELETED,
+
+    //Order
+    ORDER_PLACED,
+    ORDER_DRIVER_ASSIGNED,
+    ORDER_DELIVERY_STARTED,
+    ORDER_DELIVERED,
+    ORDER_CANCELLED,
+    
+    //Payment
+    PAYMENT_ADVANCE_PAID,
+    PAYMENT_FINAL_PAID
+}
