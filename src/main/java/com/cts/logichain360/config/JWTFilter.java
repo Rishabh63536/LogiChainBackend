@@ -38,12 +38,19 @@ public class JWTFilter extends OncePerRequestFilter {
             }
         }
         if (username != null) {
-        	
+
+
         	//Database call, fetches entire user object from DB, needed to get role from user obj as token only carries username
         	//could have used userepo to gte the username , but we are following the conventions here
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            
-            //spring confirms who the person is and what they allowed to do.
+
+            if(!userDetails.isEnabled()){
+                chain.doFilter(request,response);
+                return;
+            }
+
+
+                //spring confirms who the person is and what they allowed to do.
             //three arguments are: the user object, credentials(null as we dont need it anymore) and user's roles
             //IF TOKEN HAS EXPIRED OR NOT
             if (jwtUtil.validateToken(jwt)) {
