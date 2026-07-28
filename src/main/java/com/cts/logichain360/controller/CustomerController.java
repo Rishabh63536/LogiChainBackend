@@ -25,13 +25,6 @@ public class CustomerController {
         return customerService.getCustomerById(id);
     }
 
-//    @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
-//    @Operation(summary = "Get customer by User ID", description = "Retrieves a specific customer by their associated user ID")
-//    @GetMapping("/user/{userId}")
-//    public ResponseEntity<CustomerResponse> getByUserId(@PathVariable Long userId) {
-//        return customerService.getCustomerByUserId(userId);
-//    }
-
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all customers", description = "Retrieves a list of all customers")
     @GetMapping

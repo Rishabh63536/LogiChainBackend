@@ -32,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder encoder;
     private final JWTUtil jwtutil;
     private final UserMapper userMapper;
+    private final WarehouseRepository warehouseRepo;
 
     @Override
     @Transactional
@@ -42,7 +43,6 @@ public class UserServiceImpl implements UserService {
         }
 
         User saved = userRepo.save(userMapper.toUser(req, encoder.encode(req.getPassword())));
-
         ProfileResult p = createRoleProfile(saved, req);
 
         return new ResponseEntity<>(userMapper.toRegistrationResponse(saved, p.id(), p.table()),HttpStatus.CREATED);
@@ -59,9 +59,7 @@ public class UserServiceImpl implements UserService {
     	}
 
     	User user = optionalUser.get();
-
     	ProfileResult p = resolveRoleProfile(user);
-
     	Long warehouseId = user.getRole() == UserRole.WAREHOUSE_MANAGER
     	        ? wmRepo.findByUser(user)
     	                .map(wm -> wm.getAssignedWarehouse() == null
@@ -158,6 +156,9 @@ public class UserServiceImpl implements UserService {
                 yield new ProfileResult(wm.getId(), "warehouse_managers");
             }
             case DRIVER -> {
+                if(req.getLocation() != null && !warehouseRepo.existsByLocationIgnoreCase(req.getLocation())){
+                    throw new IllegalArgumentException(("City '" + req.getLocation() +"' does not match any existing warehouse location"));
+                }
                 Driver d = driverRepo.save(userMapper.toDriver(user, req));
                 yield new ProfileResult(d.getId(), "drivers");
             }

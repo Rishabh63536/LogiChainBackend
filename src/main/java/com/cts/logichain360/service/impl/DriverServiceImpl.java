@@ -6,6 +6,7 @@ import com.cts.logichain360.enums.AuditAction;
 import com.cts.logichain360.dto.response.DriverResponse;
 import com.cts.logichain360.mapper.DriverMapper;
 import com.cts.logichain360.repository.DriverRepository;
+import com.cts.logichain360.repository.WarehouseRepository;
 import com.cts.logichain360.service.DriverService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
@@ -17,6 +18,7 @@ import java.util.List;
 public class DriverServiceImpl implements DriverService {
     private final DriverRepository driverRepo;
     private final DriverMapper driverMapper;
+    private WarehouseRepository warehouseRepo;
 
     @Override
     public ResponseEntity<DriverResponse> getDriverById(Long id) {
@@ -51,10 +53,13 @@ public class DriverServiceImpl implements DriverService {
     @Transactional
     @Auditable(action = AuditAction.DRIVER_UPDATED, entityType = "Driver")
     public ResponseEntity<DriverResponse> updateDriver(Long id, UpdateDriverRequest req) {
+        if(req.getLocation() != null && !warehouseRepo.existsByLocationIgnoreCase(req.getLocation())){
+            throw new IllegalArgumentException(("City '" + req.getLocation() +"' does not match any existing warehouse location"));
+        }
         return driverRepo.findById(id)
                 .map(d -> {
-                    if (req.getLicenseNumber()     != null) d.setLicenseNumber(req.getLicenseNumber());
-                    if (req.getLicenseExpiry()     != null) d.setLicenseExpiry(req.getLicenseExpiry());
+                    if (req.getLicenseNumber() != null) d.setLicenseNumber(req.getLicenseNumber());
+                    if (req.getLicenseExpiry() != null) d.setLicenseExpiry(req.getLicenseExpiry());
                     if(req.getLocation() != null) d.setLocation((req.getLocation()));
                     return ResponseEntity.ok(driverMapper.toResponse(driverRepo.save(d)));
                 })

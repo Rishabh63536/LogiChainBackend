@@ -23,11 +23,9 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(request -> request
-                        // Explicitly permit ALL incoming HTTP OPTIONS preflight requests
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(AppConstants.PUBLIC_URLS).permitAll()
                         .anyRequest().authenticated())
-                //.cors(cors->cors.disable())
                 .cors(cors -> {})
                 .csrf(csrf->csrf.disable())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

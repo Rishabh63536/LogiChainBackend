@@ -33,8 +33,6 @@ public class OrderController {
     private final FileStorageService fileStorageService;
     private final PODService podService;                 
 
-    //customer-facing 
-
     @Operation(summary = "Place a new order",
                description = "Customer orders one product with a quantity. Stock is decremented atomically"+
                              "If stock falls below the reorder threshold, the warehouse manager is notified.")

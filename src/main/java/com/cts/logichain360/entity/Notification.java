@@ -57,7 +57,6 @@ public class Notification extends SoftDeletableEntity{
 	 @Builder.Default
 	 private boolean read = false;
 	 
-	 // Optional backlink: the entity that caused this notification
 	 private Long relatedEntityId;
-	 private String relatedEntityType;   // eg:"ProductWarehouse"
+	 private String relatedEntityType;
 }

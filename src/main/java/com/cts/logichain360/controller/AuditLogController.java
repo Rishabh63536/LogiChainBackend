@@ -15,10 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Read-only audit trail API. All endpoints are restricted to ADMIN.
- * No write or delete endpoints are exposed — audit logs are immutable.
- */
 @RestController
 @RequestMapping("/api/v1/audit-logs")
 @RequiredArgsConstructor

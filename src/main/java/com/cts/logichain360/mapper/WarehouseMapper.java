@@ -9,8 +9,6 @@ import com.cts.logichain360.entity.WarehouseManager;
 @Component
 public class WarehouseMapper {
 
-    // Manager is on the other side of the relationship, the service looks it up
-    // (via wmRepo.findByAssignedWarehouse_Id) and passes it in, keeping this pure.
     public WarehouseResponse toResponse(Warehouse w, WarehouseManager manager) {
         return WarehouseResponse.builder()
                 .id(w.getId())

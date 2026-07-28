@@ -22,7 +22,7 @@ public class POD extends SoftDeletableEntity {
     @JoinColumn(name = "order_id", nullable = false, unique = true)
     private Orders order;
 
-    //Just the stored filename, full url built by mapper
+    //Just the stored filename,full url built by mapper
     @Column(nullable = false, length = 255)
     private String photoFilename;
 

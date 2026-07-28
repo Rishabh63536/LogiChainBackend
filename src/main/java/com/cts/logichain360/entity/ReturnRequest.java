@@ -20,11 +20,6 @@ public class ReturnRequest extends SoftDeletableEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // CHANGED: was @OneToOne with unique=true — an order could only ever have
-    // ONE return request total. Now @ManyToOne so partial returns can happen
-    // across multiple separate requests against the same order (e.g. return
-    // 2 of 5 damaged now, another 1 later) — capped by returnQuantity totals,
-    // not by a DB uniqueness constraint.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "order_id", nullable = false)
     private Orders order;

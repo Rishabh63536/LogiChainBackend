@@ -41,7 +41,7 @@ public class OrderServiceImpl implements OrderService {
     private final DriverRepository driverRepo;
     private final ProductWarehouseRepository pwRepo;
     private final PODRepository podRepo;
-    private final PaymentRepository paymentRepo; // NEW — needed to record the REFUND ledger entry
+    private final PaymentRepository paymentRepo;
     private final NotificationService notificationService;
     private final InvoiceService invoiceService;
     private final OrderMapper orderMapper;
@@ -65,6 +65,7 @@ public class OrderServiceImpl implements OrderService {
             throw new InsufficientStockException("Insufficient stock for product " + req.getProductId()+ ". Requested " + req.getQuantity()+ ", available " + pw.getStock() + ".");
         }
 
+        //updating stock of wh after purchase
         int newStock = pw.getStock() - req.getQuantity();
         pw.setStock(newStock);
 
@@ -299,18 +300,12 @@ public class OrderServiceImpl implements OrderService {
             log.info("Driver id={} freed by cancellation.", driver.getId());
         }
 
-        // NEW — refund whatever was actually paid so far. No handling fee here,
-        // unlike returns: cancellation means nothing was ever delivered to
-        // return in the first place, so there's no restocking/processing cost
-        // to offset. Checking amountPaid directly (not order status) means
-        // this correctly does nothing for a still-PENDING order (never paid),
-        // and correctly refunds the full advance for CONFIRMED/ASSIGNED.
         if (order.getAmountPaid() > 0) {
             double refundAmount = order.getAmountPaid();
 
             paymentRepo.save(Payment.builder()
                     .order(order)
-                    .amount(-refundAmount) // negative — see PaymentType.REFUND
+                    .amount(-refundAmount)
                     .type(PaymentType.REFUND)
                     .status(PaymentStatus.SUCCESS)
                     .paidAt(LocalDateTime.now())

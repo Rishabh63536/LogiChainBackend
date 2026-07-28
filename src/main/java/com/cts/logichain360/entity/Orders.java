@@ -86,7 +86,6 @@ public class Orders extends SoftDeletableEntity {
     @Column(nullable = false)
 	private Integer quantity;
 
-    // True once amountPaid covers totalAmount both advance n final
     @Transient
     public boolean isFullyPaid() {
         if (totalAmount == null || amountPaid == null) return false;

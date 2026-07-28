@@ -20,19 +20,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 
-/**
- * Intercepts every service method annotated with @Auditable and writes one
- * AuditLog row per invocation (SUCCESS or FAILURE).
- * 
- * Separate from LoggingAspect: logging to file != persisting to DB.
- * 
- * Entity ID extraction: tries the return value's getId() first, then scans method args for the first Long, 
- * then gives up gracefully.
- * 
- * Uses AuditLogService.save() which runs in REQUIRES_NEW, so an audit failure never rolls back the 
- * calling business transaction.
- * Any exception thrown by this aspect is swallowed — audit must be invisible to the main request flow.
- */
 @Aspect
 @Component
 @RequiredArgsConstructor
@@ -49,20 +36,20 @@ public class AuditAspect {
     public Object audit(ProceedingJoinPoint joinPoint) throws Throwable {
 
         // Read annotation metadata
-        MethodSignature sig    = (MethodSignature) joinPoint.getSignature();
+        MethodSignature sig = (MethodSignature) joinPoint.getSignature();
         Method method = sig.getMethod();
         Auditable ann = method.getAnnotation(Auditable.class);
 
         String entityType = ann.entityType();
 
-        //Resolve actor from SecurityContext
+        //resolving actor from SecurityContext
         String actorPhone = ANONYMOUS;
         String actorRole  = null;
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()
                 && !"anonymousUser".equals(auth.getPrincipal())) {
-            actorPhone = auth.getName();  // phone, as set by JWTFilter / UserInfoConfigManager
+            actorPhone = auth.getName();  // phone, as set by JWTFilter
             actorRole  = auth.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .findFirst()
@@ -90,23 +77,16 @@ public class AuditAspect {
         try {
             result = joinPoint.proceed();
         } catch (Throwable ex) {
-            // Exception thrown (Pattern A — orElseThrow style)
-            // outcome = FAILURE, status = 500 (we don't know the exact status here;
-            // GlobalExceptionHandler maps it, but that runs after us)
             long elapsed = System.currentTimeMillis() - start;
             persistAudit(ann, entityType, actorPhone, actorRole,
                     httpMethod, requestUri,
                     FAILURE, 500, ex.getMessage(),
                     elapsed, null, joinPoint.getArgs());
-            throw ex;   // re-throw — caller's flow is completely unaffected
+            throw ex;
         }
 
         long elapsed = System.currentTimeMillis() - start;
 
-        // ── Determine outcome from ResponseEntity status (Pattern B fix) ──
-        // Methods that use .orElseGet(() -> ResponseEntity.notFound().build())
-        // never throw — they return a 4xx ResponseEntity. Without this check,
-        // those would be recorded as SUCCESS even though nothing was done.
         if (result instanceof ResponseEntity<?> re) {
             httpStatus = re.getStatusCode().value();
             if (re.getStatusCode().isError()) {
@@ -114,13 +94,11 @@ public class AuditAspect {
                 outcome = FAILURE;
                 errorMessage = "HTTP " + httpStatus + " returned by service";
             }
-            // 2xx stays SUCCESS, httpStatus is still captured for the audit record
         }
 
-        //Extract entity ID — only makes sense on SUCCESS
         Long entityId = SUCCESS.equals(outcome)
                 ? extractEntityId(result, joinPoint.getArgs())
-                : null;   // no entity was created/modified on failure
+                : null;
 
         persistAudit(ann, entityType, actorPhone, actorRole,
                 httpMethod, requestUri,
@@ -129,8 +107,6 @@ public class AuditAspect {
 
         return result;
     }
-
-    //Private helpers
 
     private void persistAudit(Auditable ann,
                                String entityType,
@@ -164,21 +140,9 @@ public class AuditAspect {
             auditLogService.save(entry);
 
         } catch (Exception e) {
-            // Absolute safety net — audit must never break anything
             log.error("AuditAspect.persistAudit failed unexpectedly: {}", e.getMessage(), e);
         }
     }
-
-    /**
-     * Best-effort entity ID extraction.
-     *
-     * Strategy:
-     *  1. If the return value is a ResponseEntity whose body has a getId() method,
-     *     call it. This covers the vast majority of service methods.
-     *  2. Otherwise scan the method args for the first Long — typically the
-     *     path-variable id passed to update/delete methods.
-     *  3. Give up and return null.
-     */
     private Long extractEntityId(Object result, Object[] args) {
         // Strategy 1: try the ResponseEntity body
         if (result instanceof ResponseEntity<?> re) {
@@ -190,8 +154,6 @@ public class AuditAspect {
                     if (idVal instanceof Long l) return l;
                     if (idVal instanceof Number n) return n.longValue();
                 } catch (NoSuchMethodException ignored) {
-                    // Body DTO doesn't have getId() — try getProductId() as a fallback
-                    // (Product uses productId as its PK field name)
                     try {
                         Method getProductId = body.getClass().getMethod("getProductId");
                         Object idVal = getProductId.invoke(body);
@@ -202,7 +164,6 @@ public class AuditAspect {
             }
         }
 
-        // Strategy 2: first Long arg (path-variable id for update/delete methods)
         if (args != null) {
             for (Object arg : args) {
                 if (arg instanceof Long l) return l;

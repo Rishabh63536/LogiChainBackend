@@ -25,13 +25,6 @@ public class DriverController {
         return driverService.getDriverById(id);
     }
 
-//    @PreAuthorize("hasAnyRole('ADMIN','DRIVER')")
-//    @Operation(summary = "Get driver by User ID", description = "Retrieves a specific driver by their associated user ID")
-//    @GetMapping("/user/{userId}")
-//    public ResponseEntity<DriverResponse> getByUserId(@PathVariable Long userId) {
-//        return driverService.getDriverByUserId(userId);
-//    }
-
     @PreAuthorize("hasAnyRole('ADMIN','WAREHOUSE_MANAGER')")
     @Operation(summary = "Get all drivers", description = "Retrieves a list of all drivers")
     @GetMapping

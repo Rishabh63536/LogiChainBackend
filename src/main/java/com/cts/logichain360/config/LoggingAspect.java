@@ -24,15 +24,12 @@ public class LoggingAspect {
 
 	private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
 
-	//where the aspect runs
 	@Pointcut("within(com.cts.logichain360.controller..*) || within(com.cts.logichain360.service..*)")
 	public void applicationPackagePointcut() {
 
 	}
 
-	//Wrap the target methods with logging logic
 	@Around("applicationPackagePointcut()")
-
 	public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
 		String className = joinPoint.getTarget().getClass().getSimpleName();
 		String methodName = joinPoint.getSignature().getName();
@@ -42,8 +39,6 @@ public class LoggingAspect {
 		long startTime = System.currentTimeMillis();
 
 		try {
-
-			// Proceed to execute the actual method
 			Object result = joinPoint.proceed();
 			// Calculate execution time
 			long elapsedTime = System.currentTimeMillis() - startTime;

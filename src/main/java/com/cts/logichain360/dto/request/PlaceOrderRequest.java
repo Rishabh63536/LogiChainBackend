@@ -5,7 +5,6 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
-//using schema to write metadata to class and fields
 @Schema(description = "Place a new order for one product, one quantity.")
 public class PlaceOrderRequest {
 
